@@ -22,6 +22,6 @@ app.configure 'production', ->
   watch.watch templates, _, 'templates', 'compiled', '.html', false
 
 app.get '/', (req, res) ->
-  res.send 'hi'
+  res.send templates['index'] {}
   
 app.listen 8003

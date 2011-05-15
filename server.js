@@ -28,7 +28,7 @@
     return watch.watch(templates, _, 'templates', 'compiled', '.html', false);
   });
   app.get('/', function(req, res) {
-    return res.send('hi');
+    return res.send(templates['index']({}));
   });
   app.listen(8003);
 }).call(this);

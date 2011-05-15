@@ -1,0 +1,10 @@
+compress_assets: off
+gzip_assets: off
+
+javascripts:
+  assets:
+    - lib/jquery-1.6.1.min.js
+    - lib/underscore-min.js
+    - lib/backbone-min.js
+    - compiled/*.js
+    - compiled/bootstrap.js

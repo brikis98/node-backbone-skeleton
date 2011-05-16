@@ -1,1 +1,0 @@
-MapModel = Backbone.Model.extend()

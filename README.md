@@ -49,6 +49,7 @@ var options = {
 };
 var watcher = new Watcher(options);
 watcher.watch();
+```
 
 Executing the `watch()` function does the following:
 

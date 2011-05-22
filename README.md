@@ -55,6 +55,6 @@ Executing the `watch()` function does the following:
 
 * Runs `compass watch` if a config file is specified in `options.compass`
 * Watches over the root directory (as specified in `options.root` or `'.'` by default) and takes action any time a file changes that matches one of the keys (which are regular expressions). The action taken depends on the `type`:
-** coffee: compiles the file using [CoffeeScript](http://jashkenas.github.com/coffee-script) and puts the output into the directory specified by `out`
-** template: compiles the template using [underscore.js](http://documentcloud.github.com/underscore/) and puts the output into the directory specified by `out`. Also adds this template by filename into the object specified in `options.templates`: e.g. if `foo.html` changed, `foo.js` would be created and `options.templates['foo']` would be set to the compiled function.
-** If `package: true` is specified, will also run [Jammit](http://documentcloud.github.com/jammit/) using the config file specified in `options.package` and put the output in the folder specified in `options.packageOut`
+  * coffee: compiles the file using [CoffeeScript](http://jashkenas.github.com/coffee-script) and puts the output into the directory specified by `out`  
+  * template: compiles the template using [underscore.js](http://documentcloud.github.com/underscore/) and puts the output into the directory specified by `out`. Also adds this template by filename into the object specified in `options.templates`: e.g. if `foo.html` changed, `foo.js` would be created and `options.templates['foo']` would be set to the compiled function.
+  * If `package: true` is specified, will also run [Jammit](http://documentcloud.github.com/jammit/) using the config file specified in `options.package` and put the output in the folder specified in `options.packageOut`

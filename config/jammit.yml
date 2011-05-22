@@ -6,7 +6,10 @@ javascripts:
     - dependencies/jquery-1.6.1.min.js
     - dependencies/underscore-min.js
     - dependencies/backbone-min.js
-    - compiled/namespace.js
+    - compiled/bootstrap/namespace.js
     - compiled/lib/*.js    
-    - compiled/mvc/*.js
-    - compiled/bootstrap.js
+    - compiled/models/*.js
+    - compiled/controllers/*.js
+    - compiled/views/*.js
+    - compiled/templates/*.js            
+    - compiled/bootstrap/bootstrap.js

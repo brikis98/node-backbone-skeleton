@@ -1,6 +1,6 @@
 # Overview
 
-This is project represents the skeleton of an application with [node.js](http://nodejs.org/) server-side and [backbone.js](http://documentcloud.github.com/backbone/) client-side. It is primarily for my own personal use as I develop projects using these technologies, but may be handy for others too. I will gradually evolve and improve this structure as I become more familiar with these JavaScript tools.
+This is project represents the skeleton of an application with [node.js](http://nodejs.org/) server-side and [backbone.js](http://documentcloud.github.com/backbone/) client-side. All JavaScript is written using [CoffeeScript](http://jashkenas.github.com/coffee-script), all CSS is written using [Compass](http://compass-style.org/) and [SASS](http://sass-lang.com/), all templates are written using [underscore.js](http://documentcloud.github.com/underscore/) and all client-side JavaScript is packaged using [Jammit](http://documentcloud.github.com/jammit/). A utility class is provided that automatically recompiles & packages all of these pre-processor languages every time you hit save, so you can iterate quickly: make a code change, hit refresh. It is primarily for my own personal use as I develop projects using these technologies, but may be handy for others too. I will gradually evolve and improve this structure as I become more familiar with these JavaScript tools.
 
 # Technologies
 
@@ -13,41 +13,47 @@ This is project represents the skeleton of an application with [node.js](http://
 
 # Directory structure
 
-* /bootstrap: client-side JS files used to bootstrap the application, e.g. create the [backbone.js](http://documentcloud.github.com/backbone/) controllers, models and views.
-* /compiled: all files compiled to JavaScript - namely, all the [CoffeeScript](http://jashkenas.github.com/coffee-script) and templating code - is dumped in this directory.
+* /bootstrap: client-side JS files used to bootstrap the application, e.g. setup the namespace as well as create the [backbone.js](http://documentcloud.github.com/backbone/) controllers, models and views.
+* /compiled: all files compiled to JavaScript - namely, all the [CoffeeScript](http://jashkenas.github.com/coffee-script) and templating code - is dumped in this directory. You should never need to change anything in here by hand.
 * /config: configuration settings for the project. 
 * /controllers: [backbone.js](http://documentcloud.github.com/backbone/) controllers.
 * /lib: 3rd party libraries, including [jQuery](http://jquery.com/), [underscore.js](http://documentcloud.github.com/underscore/) and [backbone.js](http://documentcloud.github.com/backbone/).
 * /models: [backbone.js](http://documentcloud.github.com/backbone/) models.
-* /node_modules: [node.js](http://nodejs.org/) modules installed via npm, including [express](http://expressjs.com/), [watch-tree](https://github.com/tafa/node-watch-tree), and [underscore.js](http://documentcloud.github.com/underscore/).
+* /node_modules: [node.js](http://nodejs.org/) modules installed via npm, including [express](http://expressjs.com/), [watch-tree](https://github.com/tafa/node-watch-tree), [node-utils](https://github.com/mikeal/node-utils) and [underscore.js](http://documentcloud.github.com/underscore/).
 * /public: all static content (CSS, JS, images) publicly visible to the browser gets dumped here. 
-* server.coffee: the main [node.js](http://nodejs.org/) server file. Gets automatically compiled into server.js using /util/watch.rb.
+* server.coffee: the main [node.js](http://nodejs.org/) server file. Gets automatically compiled into server.js using /util/watcher.coffee.
 * /stylesheets: [SASS](http://sass-lang.com/) stylesheets go here and are compiled when you hit save via [Compass](http://compass-style.org/) into /public/css.
-* /templates: [underscore.js](http://documentcloud.github.com/underscore/) templates go here and are compiled when you hit save into /compiled.
-* /util: utility classes, described below.
+* /templates: [underscore.js](http://documentcloud.github.com/underscore/) templates go here and are compiled when you hit save into /compiled/templates.
+* /util: utility class that auto-recompiles and packages all the JavaScript and CSS.
 * /views: [backbone.js](http://documentcloud.github.com/backbone/) views.
 
-# Utility classes
+# /util/watcher.coffee
 
-### watch.rb 
+This class is loaded by `server.js` at startup to watch the project using [watch-tree](https://github.com/tafa/node-watch-tree) and recompile and package files as necessary so that you can iterate quickly. The goal is to support "make a change, hit reload" style development even though this project uses a number of pre-processors that require "compilation". It works reasonably well already and as I improve, I'll likely break this off into its own Github/NPM project.
 
-Ruby class that uses [FSSM](https://github.com/ttilley/fssm) to watch the directories above and when a change is detected:
+Sample usage:
 
-* Compiles [CoffeeScript](http://jashkenas.github.com/coffee-script) files into .js files, putting client side ones under /compiled.
-* Uses [Jammit](http://documentcloud.github.com/jammit/) to concatenate and compress all .js files under /compiled into a single file under /public/js/assets.js
+```javascript
+var Watcher = require('./util/watcher').watcher;
+var options = {
+  compass: 'config/config.rb',
+  verbose: true,
+  templates: templates,
+  package: 'config/jammit.yml',
+  packageOut: 'public/js',
+  paths: {
+    'server\\.coffee':                  {type: 'coffee', out: '.'},
+    'templates/.+\\.html':              {type: 'template', out: 'compiled/templates', package: true},
+    'views/.+\\.coffee':                {type: 'coffee', out: 'compiled/views', package: true}     
+  }
+};
+var watcher = new Watcher(options);
+watcher.watch();
 
-Run this class while coding by executing `ruby util/watch.rb`.
+Executing the `watch()` function does the following:
 
-### watch.js
-
-JavaScript class that uses [watch-tree](https://github.com/tafa/node-watch-tree) to watch the /templates directory and when a change is detected in a file *foo*:
-
-* Compiles the template into an efficient JavaScript function
-* Adds this function to the templates object of server.js so it can be used server-side by calling `templates['*foo*']`
-* Writes this function into /compiled/*foo*.js so that it can be included client-side and rendered by calling `window.templates['*foo*']. This step is only done during development, not during production.
-
-This class runs automatically whenever server.js is running. 
-
-### Compass
-
-You must install [Compass](http://compass-style.org/) separately so that it can compile your [SASS](http://sass-lang.com/) code every time you hit save. Run it using the command `compass watch -c config/config.rb`. 
+* Runs `compass watch` if a config file is specified in `options.compass`
+* Watches over the root directory (as specified in `options.root` or `'.'` by default) and takes action any time a file changes that matches one of the keys (which are regular expressions). The action taken depends on the `type`:
+** coffee: compiles the file using [CoffeeScript](http://jashkenas.github.com/coffee-script) and puts the output into the directory specified by `out`
+** template: compiles the template using [underscore.js](http://documentcloud.github.com/underscore/) and puts the output into the directory specified by `out`. Also adds this template by filename into the object specified in `options.templates`: e.g. if `foo.html` changed, `foo.js` would be created and `options.templates['foo']` would be set to the compiled function.
+** If `package: true` is specified, will also run [Jammit](http://documentcloud.github.com/jammit/) using the config file specified in `options.package` and put the output in the folder specified in `options.packageOut`

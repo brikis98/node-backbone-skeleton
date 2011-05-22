@@ -1,9 +1,8 @@
 (function() {
-  var PUBLIC, Watcher, app, express, path, templates, watch, watcher, watcherOptions, _;
+  var PUBLIC, Watcher, app, express, path, templates, watcher, watcherOptions, _;
   express = require('express');
   path = require('path');
   _ = require('underscore');
-  watch = require('./util/watch');
   Watcher = require('./util/watcher').watcher;
   PUBLIC = './public';
   templates = {};

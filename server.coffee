@@ -1,7 +1,6 @@
 express   = require 'express'
 path      = require 'path'
 _         = require 'underscore'
-watch     = require './util/watch'
 Watcher   = require('./util/watcher').watcher
 PUBLIC    = './public'
 templates = {}

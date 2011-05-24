@@ -8,8 +8,9 @@
   child_process = require('child_process');
   _ = require('underscore');
   Watcher = (function() {
-    function Watcher(options) {
+    function Watcher(options, templates) {
       this.options = options;
+      this.templates = templates;
       this.handleFile = __bind(this.handleFile, this);
     }
     Watcher.prototype.watch = function() {
@@ -17,10 +18,10 @@
         this.runCompass(this.options.compass);
       }
       if (this.options.paths) {
-        return this.watchTree(this.options.root, this.options.sampleRate);
+        return this.watchTree(this.options.paths, this.options.root, this.options.sampleRate);
       }
     };
-    Watcher.prototype.watchTree = function(root, sampleRate) {
+    Watcher.prototype.watchTree = function(paths, root, sampleRate) {
       var watcher;
       if (root == null) {
         root = '.';
@@ -28,12 +29,26 @@
       if (sampleRate == null) {
         sampleRate = 5;
       }
-      console.log("Watching for changes under root '" + root + "' to paths " + (JSON.stringify(_.keys(this.options.paths))));
+      root = path.resolve(root);
+      console.log("Watching for changes under root '" + root + "' to paths " + (JSON.stringify(_.keys(paths))));
+      this.initPaths(paths);
       watcher = watchTree.watchTree(root, {
         'sample-rate': sampleRate
       });
       watcher.on('fileModified', this.handleFile);
       return watcher.on('fileCreated', this.handleFile);
+    };
+    Watcher.prototype.initPaths = function(rawPaths) {
+      var path, value, _results;
+      this.paths = [];
+      _results = [];
+      for (path in rawPaths) {
+        value = rawPaths[path];
+        _results.push(this.paths.push(_.extend(value, {
+          regEx: new RegExp(path)
+        })));
+      }
+      return _results;
     };
     Watcher.prototype.runCompass = function(config) {
       console.log("Starting compass with config file '" + config + "'");
@@ -55,17 +70,17 @@
         }
       }, this));
     };
-    Watcher.prototype.handleFile = function(file, stats) {
+    Watcher.prototype.handleFile = function(file) {
       var match;
-      match = _.detect(this.options.paths, __bind(function(value, key) {
-        return new RegExp(key).test(file);
+      match = _.detect(this.paths, __bind(function(toTest) {
+        return toTest.regEx.test(file);
       }, this));
       if (match) {
         return this.processFile(file, match);
       }
     };
     Watcher.prototype.processFile = function(file, options) {
-      console.log("Processing change at '" + file + "'");
+      console.log("Processing change in '" + file + "'");
       switch (options.type) {
         case 'coffee':
           this.compileCoffee(file, options.out);
@@ -100,11 +115,13 @@
       this.log("Compiling template file '" + file + "' to '" + out + "' and adding it to templates object");
       templateName = path.basename(file, path.extname(file));
       compiled = _.template(fs.readFileSync(file, 'UTF-8'));
-      this.options.templates[templateName] = compiled;
-      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates." + templateName + " = function") + ';';
-      return fileUtil.mkdirs(out, 0755, __bind(function() {
-        return fs.writeFileSync(path.join(out, "" + templateName + ".js"), asString);
-      }, this));
+      this.templates[templateName] = compiled;
+      if (out) {
+        asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates." + templateName + " = function") + ';';
+        return fileUtil.mkdirs(out, 0755, __bind(function() {
+          return fs.writeFileSync(path.join(out, "" + templateName + ".js"), asString);
+        }, this));
+      }
     };
     Watcher.prototype.packageFiles = function(file) {
       this.log('Packaging files using jammit');

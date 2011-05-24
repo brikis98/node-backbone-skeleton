@@ -6,19 +6,27 @@ child_process = require 'child_process'
 _             = require 'underscore'
 
 class Watcher
-  constructor: (@options) ->
+  constructor: (@options, @templates) ->
   
   watch: ->
     @runCompass @options.compass if @options.compass
-    @watchTree @options.root, @options.sampleRate if @options.paths
+    @watchTree @options.paths, @options.root, @options.sampleRate if @options.paths
   
-  watchTree: (root = '.', sampleRate = 5) -> 
-    console.log "Watching for changes under root '#{root}' to paths #{JSON.stringify _.keys @options.paths}"
-    watcher = watchTree.watchTree(root, {'sample-rate': sampleRate})
+  watchTree: (paths, root = '.', sampleRate = 5) -> 
+    root = path.resolve root
+    console.log "Watching for changes under root '#{root}' to paths #{JSON.stringify _.keys paths}"
     
+    @initPaths paths
+    
+    watcher = watchTree.watchTree root, {'sample-rate': sampleRate}
     watcher.on('fileModified', @handleFile)
-    watcher.on('fileCreated', @handleFile)    
+    watcher.on('fileCreated', @handleFile)
   
+  initPaths: (rawPaths) ->
+    @paths = []
+    for path, value of rawPaths
+      @paths.push _.extend value, {regEx: new RegExp path}      
+    
   runCompass: (config) ->
     console.log "Starting compass with config file '#{config}'"
     @spawn 'compass', ['watch', '-c',  config]
@@ -33,13 +41,13 @@ class Watcher
       @log "'#{command}' exited with code #{code}"
       callback code if callback
       
-  handleFile: (file, stats) =>     
-    match = _.detect @options.paths, (value, key) =>     
-      new RegExp(key).test file
+  handleFile: (file) =>
+    match = _.detect @paths, (toTest) =>     
+      toTest.regEx.test file
     @processFile file, match if match
 
   processFile: (file, options) ->
-    console.log "Processing change at '#{file}'"
+    console.log "Processing change in '#{file}'"
     switch options.type
       when 'coffee' then @compileCoffee file, options.out
       when 'template' then @compileTemplate file, options.out
@@ -62,11 +70,12 @@ class Watcher
 
     templateName = path.basename(file, path.extname(file));
     compiled = _.template(fs.readFileSync(file, 'UTF-8'));
-    @options.templates[templateName] = compiled
+    @templates[templateName] = compiled
     
-    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates.#{templateName} = function") + ';';       
-    fileUtil.mkdirs out, 0755,  =>      
-      fs.writeFileSync(path.join(out, "#{templateName}.js"), asString);
+    if out
+      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates.#{templateName} = function") + ';';       
+      fileUtil.mkdirs out, 0755,  =>      
+        fs.writeFileSync(path.join(out, "#{templateName}.js"), asString);
   
   packageFiles: (file) ->
     @log 'Packaging files using jammit'

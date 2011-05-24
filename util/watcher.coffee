@@ -4,29 +4,24 @@ path          = require 'path'
 watchTree     = require 'watch-tree'
 child_process = require 'child_process'
 _             = require 'underscore'
+glob          = require 'glob'
 
 class Watcher
   constructor: (@options, @templates) ->
-  
+    @paths = @options.paths
+    
   watch: ->
     @runCompass @options.compass if @options.compass
-    @watchTree @options.paths, @options.root, @options.sampleRate if @options.paths
+    @watchTree @options.root, @options.sampleRate if @paths
   
-  watchTree: (paths, root = '.', sampleRate = 5) -> 
+  watchTree: (root = '.', sampleRate = 5) -> 
     root = path.resolve root
-    console.log "Watching for changes under root '#{root}' to paths #{JSON.stringify _.keys paths}"
-    
-    @initPaths paths
+    console.log "Watching for changes under root '#{root}' to paths #{JSON.stringify _.keys @paths}"
     
     watcher = watchTree.watchTree root, {'sample-rate': sampleRate}
     watcher.on('fileModified', @handleFile)
     watcher.on('fileCreated', @handleFile)
   
-  initPaths: (rawPaths) ->
-    @paths = []
-    for path, value of rawPaths
-      @paths.push _.extend value, {regEx: new RegExp path}      
-    
   runCompass: (config) ->
     console.log "Starting compass with config file '#{config}'"
     @spawn 'compass', ['watch', '-c',  config]
@@ -41,11 +36,19 @@ class Watcher
       @log "'#{command}' exited with code #{code}"
       callback code if callback
       
-  handleFile: (file) =>
-    match = _.detect @paths, (toTest) =>     
-      toTest.regEx.test file
+  handleFile: (file) => 
+    # glob.fnmatch does not behave as expected, so use RegExp instead
+    match = _.detect @paths, (value, pattern) =>     
+      @globToRegExp(pattern).test file
     @processFile file, match if match
-
+  
+  globToRegExp: (glob) ->
+    regex = glob.replace /\./g, '\\.'                 # escape dots
+    regex = regex.replace /\?/g, '.'                  # replace ? with dots
+    regex = regex.replace /\*/g, '.*'                 # replace * with .*
+    regex = regex.replace /\.\*\.\*\//g, '(.*\/)*'    # replace .*.*/ (which used to be **/) with (.*/)*
+    new RegExp regex
+    
   processFile: (file, options) ->
     console.log "Processing change in '#{file}'"
     switch options.type
@@ -58,24 +61,33 @@ class Watcher
     @log "Compiling CoffeeScript file '#{file}' to '#{out}'"
     @spawn 'coffee', ['--output', out, '--compile', file]
     
-  compileTemplates: (templateDir, templateExtension, out) ->
-    @log "Compiling all templates under '#{templateDir}' to '#{out}'"  
+  compileTemplates: ->
+    @log "Compiling all templates"  
 
-    templates = fs.readdirSync templateDir
-    for template in templates
-      @compileTemplate path.join(templateDir, template), out if path.extname(template) == templateExtension
+    @processTemplatePattern(pattern, value) for pattern, value of @paths
+  
+  processTemplatePattern: (pattern, value) ->
+    return if value.type != 'template'
+    
+    glob.glob pattern, (err, matches) =>
+      console.log "#{err}" if err
+      for match in matches
+        @compileTemplate match, value.out    
     
   compileTemplate: (file, out) ->
     @log "Compiling template file '#{file}' to '#{out}' and adding it to templates object"
 
-    templateName = path.basename(file, path.extname(file));
-    compiled = _.template(fs.readFileSync(file, 'UTF-8'));
-    @templates[templateName] = compiled
-    
-    if out
-      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates.#{templateName} = function") + ';';       
-      fileUtil.mkdirs out, 0755,  =>      
-        fs.writeFileSync(path.join(out, "#{templateName}.js"), asString);
+    templateName = path.basename file, path.extname(file)
+    fs.readFile file, 'utf8', (err, data) =>
+      return console.log(err) if err
+      compiled = _.template data 
+      @templates[templateName] = compiled
+      @writeTemplate(templateName, compiled, out) if out
+  
+  writeTemplate: (templateName, compiled, out) ->
+    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates.#{templateName} = function") + ';'      
+    fileUtil.mkdirs out, 0755,  =>      
+      fs.writeFile path.join(out, "#{templateName}.js"), asString, 'utf8'
   
   packageFiles: (file) ->
     @log 'Packaging files using jammit'

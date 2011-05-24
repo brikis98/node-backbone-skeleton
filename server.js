@@ -4,10 +4,11 @@
   path = require('path');
   _ = require('underscore');
   Watcher = require('./util/watcher').watcher;
-  templates = {};
   Settings = require('settings');
+  templates = {};
   settings = new Settings(path.join(__dirname, '/config/environment.js')).getEnvironment();
   watcher = new Watcher(settings.watcherOptions, templates);
+  watcher.compileTemplates();
   app = express.createServer();
   app.configure('development', function() {
     app.use(express.static(settings.publicDir));
@@ -25,7 +26,6 @@
     }));
     return app.use(express.errorHandler());
   });
-  watcher.compileTemplates(settings.templatesDir, settings.templatesExtension, settings.templatesOut);
   app.get('/', function(req, res) {
     return res.send(templates['index']({
       name: 'Jim'

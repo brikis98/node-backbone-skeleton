@@ -10,6 +10,7 @@ This is project represents the skeleton of an application with [node.js](http://
 * Preprocessor: [CoffeeScript](http://jashkenas.github.com/coffee-script)
 * Client-side library: [jQuery](http://jquery.com/)
 * Stylesheets: [Compass](http://compass-style.org/) and [SASS](http://sass-lang.com/)
+* Config: [node-settings](https://github.com/mgutz/node-settings)
 
 # Directory structure
 

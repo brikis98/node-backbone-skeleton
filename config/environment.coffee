@@ -1,5 +1,9 @@
+oneYear = 1000 * 60 * 60 * 24 * 365
+
 exports.common =
-  publicDir: 'public'
+  cookieMaxAge:     oneYear
+  publicDir:        'public'
+  cookieSecret:     'my.secret.phrase'
 
 exports.development =   
   watcherOptions: 
@@ -11,13 +15,15 @@ exports.development =
       'server.coffee':                                {type: 'coffee', out: '.'}
       'util/**/*.coffee':                             {type: 'coffee', out: 'util'}
       'config/**/*.coffee':                           {type: 'coffee', out: 'config'}      
+      'server-lib/**/*.coffee':                       {type: 'coffee', out: 'server-lib'}      
       'bootstrap/**/*.coffee':                        {type: 'coffee', out: 'compiled/bootstrap', package: true}
       'models/**/*.coffee':                           {type: 'coffee', out: 'compiled/models', package: true}
       'controllers/**/*.coffee':                      {type: 'coffee', out: 'compiled/controllers', package: true}
       'views/**/*.coffee':                            {type: 'coffee', out: 'compiled/views', package: true}        
-      'lib/**/*.coffee':                              {type: 'coffee', out: 'compiled/lib', package: true}
+      'client-lib/**/*.coffee':                       {type: 'coffee', out: 'compiled/lib', package: true}
       'templates/**/*.html':                          {type: 'template', out: 'compiled/templates', package: true}      
       
-exports.production = {}
+exports.production = 
+  staticMaxAge:     oneYear  
 
 exports.test = {}

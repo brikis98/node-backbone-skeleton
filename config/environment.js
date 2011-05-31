@@ -1,6 +1,10 @@
 (function() {
+  var oneYear;
+  oneYear = 1000 * 60 * 60 * 24 * 365;
   exports.common = {
-    publicDir: 'public'
+    cookieMaxAge: oneYear,
+    publicDir: 'public',
+    cookieSecret: 'my.secret.phrase'
   };
   exports.development = {
     watcherOptions: {
@@ -20,6 +24,10 @@
         'config/**/*.coffee': {
           type: 'coffee',
           out: 'config'
+        },
+        'server-lib/**/*.coffee': {
+          type: 'coffee',
+          out: 'server-lib'
         },
         'bootstrap/**/*.coffee': {
           type: 'coffee',
@@ -41,7 +49,7 @@
           out: 'compiled/views',
           package: true
         },
-        'lib/**/*.coffee': {
+        'client-lib/**/*.coffee': {
           type: 'coffee',
           out: 'compiled/lib',
           package: true
@@ -54,6 +62,8 @@
       }
     }
   };
-  exports.production = {};
+  exports.production = {
+    staticMaxAge: oneYear
+  };
   exports.test = {};
 }).call(this);

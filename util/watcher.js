@@ -142,7 +142,7 @@
     };
     Watcher.prototype.writeTemplate = function(templateName, compiled, out) {
       var asString;
-      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates." + templateName + " = function") + ';';
+      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwwindow.templates['" + templateName + "'] = function") + ';';
       return fileUtil.mkdirs(out, 0755, __bind(function() {
         return fs.writeFile(path.join(out, "" + templateName + ".js"), asString, 'utf8');
       }, this));

@@ -85,7 +85,7 @@ class Watcher
       @writeTemplate(templateName, compiled, out) if out
   
   writeTemplate: (templateName, compiled, out) ->
-    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates.#{templateName} = function") + ';'      
+    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwwindow.templates['#{templateName}'] = function") + ';'      
     fileUtil.mkdirs out, 0755,  =>      
       fs.writeFile path.join(out, "#{templateName}.js"), asString, 'utf8'
   

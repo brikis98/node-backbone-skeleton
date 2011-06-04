@@ -29,7 +29,7 @@
         root = '.';
       }
       if (sampleRate == null) {
-        sampleRate = 5;
+        sampleRate = 1;
       }
       root = path.resolve(root);
       console.log("Watching for changes under root '" + root + "' to paths " + (JSON.stringify(_.keys(this.paths))));

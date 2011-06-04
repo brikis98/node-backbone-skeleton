@@ -14,7 +14,7 @@ class Watcher
     @runCompass @options.compass if @options.compass
     @watchTree @options.root, @options.sampleRate if @paths
   
-  watchTree: (root = '.', sampleRate = 5) -> 
+  watchTree: (root = '.', sampleRate = 1) -> 
     root = path.resolve root
     console.log "Watching for changes under root '#{root}' to paths #{JSON.stringify _.keys @paths}"
     

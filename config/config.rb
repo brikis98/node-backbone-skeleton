@@ -6,6 +6,9 @@ css_dir = "public/css"
 sass_dir = "stylesheets"
 images_dir = "public/img"
 javascripts_dir = "public/js"
+http_images_path = "/img"
+http_stylesheets_path = "/css"
+http_javascripts_path = "/js"
 output_style = :compressed
 
 # You can select your preferred output style here (can be overridden via the command line):

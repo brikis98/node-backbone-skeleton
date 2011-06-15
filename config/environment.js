@@ -7,6 +7,11 @@
     cookieSecret: 'my.secret.phrase'
   };
   exports.development = {
+    staticMaxAge: null,
+    errorHandling: {
+      dumpExceptions: true,
+      showStack: true
+    },
     watcherOptions: {
       compass: 'config/config.rb',
       verbose: true,
@@ -63,7 +68,8 @@
     }
   };
   exports.production = {
-    staticMaxAge: oneYear
+    staticMaxAge: oneYear,
+    errorHandling: {}
   };
   exports.test = {};
 }).call(this);

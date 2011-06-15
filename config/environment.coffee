@@ -5,12 +5,16 @@ exports.common =
   publicDir:        'public'
   cookieSecret:     'my.secret.phrase'
 
-exports.development =   
+exports.development = 
+  staticMaxAge:           null
+  errorHandling:
+    dumpExceptions:       true
+    showStack:            true      
   watcherOptions: 
-    compass: 'config/config.rb'
-    verbose: true
-    package: 'config/jammit.yml'
-    packageOut: 'public/js'
+    compass:              'config/config.rb'
+    verbose:              true
+    package:              'config/jammit.yml'
+    packageOut:           'public/js'
     paths:
       'server.coffee':                                {type: 'coffee', out: '.'}
       'util/**/*.coffee':                             {type: 'coffee', out: 'util'}
@@ -24,6 +28,7 @@ exports.development =
       'templates/**/*.html':                          {type: 'template', out: 'compiled/templates', package: true}      
       
 exports.production = 
-  staticMaxAge:     oneYear  
+  staticMaxAge:     oneYear
+  errorHandling:    {}    
 
 exports.test = {}

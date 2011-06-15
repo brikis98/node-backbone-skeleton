@@ -8,7 +8,7 @@ glob          = require 'glob'
 
 class Watcher
   constructor: (@options, @templates) ->
-    @paths = @options.paths
+    @paths = @options?.paths
     
   watch: ->
     @runCompass @options.compass if @options.compass
@@ -85,7 +85,7 @@ class Watcher
       @writeTemplate(templateName, compiled, out) if out
   
   writeTemplate: (templateName, compiled, out) ->
-    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwwindow.templates['#{templateName}'] = function") + ';'      
+    asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates['#{templateName}'] = function") + ';'      
     fileUtil.mkdirs out, 0755,  =>      
       fs.writeFile path.join(out, "#{templateName}.js"), asString, 'utf8'
   
@@ -94,6 +94,6 @@ class Watcher
     @spawn 'jammit', ['-c', @options.package, '-o', @options.packageOut]
   
   log: (message) ->
-    console.log message if @options.verbose    
+    console.log message if @options?.verbose    
       
 exports?.watcher = Watcher

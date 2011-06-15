@@ -11,6 +11,11 @@
   watcher.compileTemplates();
   app = express.createServer();
   app.configure(function() {
+    app.use(express.errorHandler(settings.errorHandling));
+    app.use(express.static(settings.publicDir, {
+      maxAge: settings.staticMaxAge
+    }));
+    app.use(express.bodyParser());
     app.use(express.cookieParser({
       maxAge: settings.cookieMaxAge
     }));
@@ -19,18 +24,7 @@
     }));
   });
   app.configure('development', function() {
-    app.use(express.static(settings.publicDir));
-    app.use(express.errorHandler({
-      dumpExceptions: true,
-      showStack: true
-    }));
     return watcher.watch();
-  });
-  app.configure('production', function() {
-    app.use(express.static(settings.publicDir, {
-      maxAge: settings.staticMaxAge
-    }));
-    return app.use(express.errorHandler());
   });
   app.get('/', function(req, res) {
     return res.send(templates['index']({

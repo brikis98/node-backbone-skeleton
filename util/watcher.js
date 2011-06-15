@@ -10,10 +10,11 @@
   glob = require('glob');
   Watcher = (function() {
     function Watcher(options, templates) {
+      var _ref;
       this.options = options;
       this.templates = templates;
       this.handleFile = __bind(this.handleFile, this);
-      this.paths = this.options.paths;
+      this.paths = (_ref = this.options) != null ? _ref.paths : void 0;
     }
     Watcher.prototype.watch = function() {
       if (this.options.compass) {
@@ -142,7 +143,7 @@
     };
     Watcher.prototype.writeTemplate = function(templateName, compiled, out) {
       var asString;
-      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwwindow.templates['" + templateName + "'] = function") + ';';
+      asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates['" + templateName + "'] = function") + ';';
       return fileUtil.mkdirs(out, 0755, __bind(function() {
         return fs.writeFile(path.join(out, "" + templateName + ".js"), asString, 'utf8');
       }, this));
@@ -152,7 +153,8 @@
       return this.spawn('jammit', ['-c', this.options.package, '-o', this.options.packageOut]);
     };
     Watcher.prototype.log = function(message) {
-      if (this.options.verbose) {
+      var _ref;
+      if ((_ref = this.options) != null ? _ref.verbose : void 0) {
         return console.log(message);
       }
     };

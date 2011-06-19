@@ -37,8 +37,15 @@
       watcher = watchTree.watchTree(root, {
         'sample-rate': sampleRate
       });
-      watcher.on('fileModified', this.handleFile);
-      return watcher.on('fileCreated', this.handleFile);
+      watcher.on('fileModified', __bind(function(file) {
+        return this.handleFile(file, 'modify');
+      }, this));
+      watcher.on('fileCreated', __bind(function(file) {
+        return this.handleFile(file, 'create');
+      }, this));
+      return watcher.on('fileDeleted', __bind(function(file) {
+        return this.handleFile(file, 'delete');
+      }, this));
     };
     Watcher.prototype.runCompass = function(config) {
       console.log("Starting compass with config file '" + config + "'");
@@ -51,22 +58,23 @@
         return this.log("stdout from '" + command + "': " + data);
       }, this));
       child.stderr.on('data', __bind(function(data) {
-        return console.log("stderr from '" + command + "': " + data);
+        return console.error("stderr from '" + command + "': " + data);
       }, this));
       return child.on('exit', __bind(function(code) {
         this.log("'" + command + "' exited with code " + code);
-        if (callback) {
-          return callback(code);
-        }
+        return typeof callback === "function" ? callback(code) : void 0;
       }, this));
     };
-    Watcher.prototype.handleFile = function(file) {
-      var match;
-      match = _.detect(this.paths, __bind(function(value, pattern) {
+    Watcher.prototype.findMatch = function(file) {
+      return _.detect(this.paths, __bind(function(value, pattern) {
         return this.globToRegExp(pattern).test(file);
       }, this));
+    };
+    Watcher.prototype.handleFile = function(file, action) {
+      var match;
+      match = this.findMatch(file);
       if (match) {
-        return this.processFile(file, match);
+        return this.processFile(file, action, match);
       }
     };
     Watcher.prototype.globToRegExp = function(glob) {
@@ -77,25 +85,33 @@
       regex = regex.replace(/\.\*\.\*\//g, '(.*\/)*');
       return new RegExp(regex);
     };
-    Watcher.prototype.processFile = function(file, options) {
+    Watcher.prototype.processFile = function(file, action, options) {
+      var success;
       console.log("Processing change in '" + file + "'");
+      success = (__bind(function() {
+        if (options.package) {
+          return this.packageFiles(file);
+        }
+      }, this));
       switch (options.type) {
         case 'coffee':
-          this.compileCoffee(file, options.out);
-          break;
+          return this.compileCoffee(file, action, options.out, success);
         case 'template':
-          this.compileTemplate(file, options.out);
-          break;
+          return this.compileTemplate(file, action, options.out, success);
         default:
-          console.log("Unrecognized type '" + type + "', skipping file '" + file + "'");
-      }
-      if (options.package) {
-        return this.packageFiles(file);
+          return console.log("Unrecognized type '" + type + "', skipping file '" + file + "'");
       }
     };
-    Watcher.prototype.compileCoffee = function(file, out) {
-      this.log("Compiling CoffeeScript file '" + file + "' to '" + out + "'");
-      return this.spawn('coffee', ['--output', out, '--compile', file]);
+    Watcher.prototype.compileCoffee = function(file, action, out, callback) {
+      var coffeeName;
+      coffeeName = path.basename(file, path.extname(file));
+      if (action === 'delete') {
+        this.log("Handling delete of CoffeeScript file ''" + file + "'");
+        return this.deleteFile(this.outFile(out, coffeeName, 'js'), callback);
+      } else {
+        this.log("Compiling CoffeeScript file '" + file + "' to '" + out + "'");
+        return this.spawn('coffee', ['--output', out, '--compile', file], callback);
+      }
     };
     Watcher.prototype.compileTemplates = function() {
       var pattern, value, _ref, _results;
@@ -108,6 +124,15 @@
       }
       return _results;
     };
+    Watcher.prototype.deleteFile = function(file, callback) {
+      return fs.unlink(file, __bind(function(err) {
+        if (err) {
+          return this.log("Couldn't delete file '" + file + "': " + (JSON.stringify(err)));
+        }
+        console.log("Calling callback " + callback);
+        return typeof callback === "function" ? callback() : void 0;
+      }, this));
+    };
     Watcher.prototype.processTemplatePattern = function(pattern, value) {
       if (value.type !== 'template') {
         return;
@@ -115,37 +140,45 @@
       return glob.glob(pattern, __bind(function(err, matches) {
         var match, _i, _len, _results;
         if (err) {
-          console.log("" + err);
+          return console.log("" + err);
         }
         _results = [];
         for (_i = 0, _len = matches.length; _i < _len; _i++) {
           match = matches[_i];
-          _results.push(this.compileTemplate(match, value.out));
+          _results.push(this.compileTemplate(match, 'create', value.out));
         }
         return _results;
       }, this));
     };
-    Watcher.prototype.compileTemplate = function(file, out) {
+    Watcher.prototype.compileTemplate = function(file, action, out, callback) {
       var templateName;
-      this.log("Compiling template file '" + file + "' to '" + out + "' and adding it to templates object");
       templateName = path.basename(file, path.extname(file));
-      return fs.readFile(file, 'utf8', __bind(function(err, data) {
-        var compiled;
-        if (err) {
-          return console.log(err);
-        }
-        compiled = _.template(data);
-        this.templates[templateName] = compiled;
-        if (out) {
-          return this.writeTemplate(templateName, compiled, out);
-        }
-      }, this));
+      if (action === 'delete') {
+        this.log("Handling delete of template '" + file + "'");
+        return this.deleteFile(this.outFile(out, templateName, 'js'), callback);
+      } else {
+        this.log("Compiling template file '" + file + "' to '" + out + "' and adding it to templates object");
+        return fs.readFile(file, 'utf8', __bind(function(err, data) {
+          var compiled;
+          if (err) {
+            return console.log(err);
+          }
+          compiled = _.template(data);
+          this.templates[templateName] = compiled;
+          if (out) {
+            return this.writeTemplate(templateName, compiled, out, callback);
+          }
+        }, this));
+      }
     };
-    Watcher.prototype.writeTemplate = function(templateName, compiled, out) {
+    Watcher.prototype.outFile = function(outDir, filename, ext) {
+      return path.join(outDir, "" + filename + "." + ext);
+    };
+    Watcher.prototype.writeTemplate = function(templateName, compiled, out, callback) {
       var asString;
       asString = compiled.toString().replace('function anonymous', "window.templates || (window.templates = {});\nwindow.templates['" + templateName + "'] = function") + ';';
       return fileUtil.mkdirs(out, 0755, __bind(function() {
-        return fs.writeFile(path.join(out, "" + templateName + ".js"), asString, 'utf8');
+        return fs.writeFile(this.outFile(out, templateName, 'js'), asString, 'utf8', callback);
       }, this));
     };
     Watcher.prototype.packageFiles = function(file) {

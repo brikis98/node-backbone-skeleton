@@ -2,6 +2,15 @@
 
 This is project represents the skeleton of an application with [node.js](http://nodejs.org/) server-side and [backbone.js](http://documentcloud.github.com/backbone/) client-side. All JavaScript is written using [CoffeeScript](http://jashkenas.github.com/coffee-script), all CSS is written using [Compass](http://compass-style.org/) and [SASS](http://sass-lang.com/), all templates are written using [underscore.js](http://documentcloud.github.com/underscore/) and all client-side JavaScript is packaged using [Jammit](http://documentcloud.github.com/jammit/). A utility class is provided that automatically recompiles & packages all of these pre-processor languages every time you hit save, so you can iterate quickly: make a code change, hit refresh. It is primarily for my own personal use as I develop projects using these technologies, but may be handy for others too. I will gradually evolve and improve this structure as I become more familiar with these JavaScript tools.
 
+# Getting Started
+
+	
+
+1. `gem install compass`
+1. `npm install glob`
+1. Add the NODE_ENV=development to your environment variables (e.g. add `export NODE_ENV=development` to `.bash_profile`)
+1. Run with `node server.js`
+
 # Technologies
 
 * Server: [node.js](http://nodejs.org/) + [express](http://expressjs.com/)

@@ -11,7 +11,7 @@ This is project represents the skeleton of an application with [node.js](http://
 1. Add the NODE_ENV=development to your environment variables (e.g. add `export NODE_ENV=development` to `.bash_profile`)
 1. Run with `node server.js` (or `supervisor server.js` to get "hot redeploy")
 1. Go to http://localhost:8003
-1. Make changes to the code and watch the CoffeeScript, SASS and underscore templates all get recompiled as soon as you hit save
+1. Make changes to the code and watch the CoffeeScript, SASS and templates get recompiled as soon as you hit save
 
 # Technologies
 

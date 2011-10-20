@@ -8,6 +8,8 @@ This is project represents the skeleton of an application with [node.js](http://
 
 1. `gem install compass`
 1. `npm install glob`
+1. `gem install jammit`
+1. 'npm install -g coffee-script`
 1. Add the NODE_ENV=development to your environment variables (e.g. add `export NODE_ENV=development` to `.bash_profile`)
 1. Run with `node server.js` (or `supervisor server.js` to get "hot redeploy")
 1. Go to http://localhost:8003

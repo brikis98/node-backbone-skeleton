@@ -1,3 +1,7 @@
+# Update
+
+This project is from 2011 and is **no longer maintained**. It has been supersceded by the many [node.js frameworks](http://nodeframework.com/) that are now available and tools like [grunt.js](http://gruntjs.com/) and [gulp.js](http://gulpjs.com/).
+
 # Overview
 
 This is project represents the skeleton of an application with [node.js](http://nodejs.org/) server-side and [backbone.js](http://documentcloud.github.com/backbone/) client-side. All JavaScript is written using [CoffeeScript](http://jashkenas.github.com/coffee-script), all CSS is written using [Compass](http://compass-style.org/) and [SASS](http://sass-lang.com/), all templates are written using [underscore.js](http://documentcloud.github.com/underscore/) and all client-side JavaScript is packaged using [Jammit](http://documentcloud.github.com/jammit/). A utility class is provided that automatically recompiles & packages all of these pre-processor languages every time you hit save, so you can iterate quickly: make a code change, hit refresh. 
